@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoTrader AI - Production</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #0f172a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #94a3b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+            padding: 10px;
+            border-radius: 50%;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stat-card {
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 140px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        .profit {
+            color: var(--success);
+        }
+        
+        .loss {
+            color: var(--danger);
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .chart-container {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            height: 300px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .control-group {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .control-group h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+        
+        .control-group h2 i {
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .trades-log {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .trades-log h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+        
+        .log-entry {
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .log-entry.buy {
+            border-left-color: var(--success);
+        }
+        
+        .log-entry.sell {
+            border-left-color: var(--danger);
+        }
+        
+        .log-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .ai-analysis {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 10px;
+        }
+        
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .ai-content {
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.warning {
+            background: var(--warning);
+        }
+        
+        .notification.danger {
+            background: var(--danger);
+        }
+        
+        .signal-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .signal-buy {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .signal-sell {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .signal-hold {
+            background-color: rgba(156, 163, 175, 0.2);
+            color: var(--gray);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat-card {
+                width: 100%;
+            }
+            
+            header {
+                padding: 15px 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <div>
+                    <h1>AutoTrader AI PRO</h1>
+                    <div class="subtitle">Automated Trading with Deriv & DeepSeek AI</div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Account Balance</div>
+                    <div class="stat-value" id="balance">$10,000.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Today's Profit</div>
+                    <div class="stat-value profit" id="dailyProfit">+$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Open Trades</div>
+                    <div class="stat-value" id="openTrades">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Success Rate</div>
+                    <div class="stat-value" id="successRate">0%</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="chart-container">
+                <canvas id="marketChart"></canvas>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h2><i class="fas fa-cog"></i> Trading Settings</h2>
+                    <div class="form-group">
+                        <label for="asset">Select Asset</label>
+                        <select id="asset">
+                            <option value="R_50">Volatility 50 Index</option>
+                            <option value="R_75">Volatility 75 Index</option>
+                            <option value="R_100" selected>Volatility 100 Index</option>
+                            <option value="frxEURUSD">EUR/USD</option>
+                            <option value="frxGBPUSD">GBP/USD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe</label>
+                        <select id="timeframe">
+                            <option value="1m">1 Minute</option>
+                            <option value="5m">5 Minutes</option>
+                            <option value="15m" selected>15 Minutes</option>
+                            <option value="1h">1 Hour</option>
+                            <option value="4h">4 Hours</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Trade Amount ($)</label>
+                        <input type="number" id="amount" min="1" max="10000" value="10">
+                    </div>
+                    
+                    <button class="btn-primary" id="startBtn">
+                        <i class="fas fa-play"></i> Start Auto Trading
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <h2><i class="fas fa-shield-alt"></i> Risk Management</h2>
+                    <div class="form-group">
+                        <label for="stopLoss">Stop Loss (%)</label>
+                        <input type="range" id="stopLoss" min="1" max="10" value="2">
+                        <span id="stopLossValue">2%</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="takeProfit">Take Profit (%)</label>
+                        <input type="range" id="takeProfit" min="1" max="15" value="5">
+                        <span id="takeProfitValue">5%</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="riskLevel">Risk Level</label>
+                        <select id="riskLevel">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-danger" id="stopBtn">
+                        <i class="fas fa-stop"></i> Emergency Stop
+                    </button>
+                </div>
+            </div>
+            
+            <div class="ai-analysis">
+                <div class="ai-header">
+                    <h2><i class="fas fa-brain"></i> DeepSeek AI Analysis</h2>
+                    <span id="aiStatus" class="pulse">Waiting to start...</span>
+                </div>
+                <div class="ai-content" id="aiAnalysisContent">
+                    Start auto trading to see AI analysis
+                </div>
+            </div>
+            
+            <div class="trades-log">
+                <h2><i class="fas fa-history"></i> Trade History</h2>
+                <div id="tradesContainer">
+                    <div class="log-entry">
+                        <div>No trades yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>AutoTrader AI PRO v1.0 • Integrated with Deriv SmartTrader and DeepSeek AI</p>
+            <p>This is a real trading application. Trade responsibly.</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-bell"></i>
+        <span id="notificationText">System ready</span>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5000/api'; // Change to your server URL in production
+        let tradingInterval;
+        let marketData = [];
+        const chartDataPoints = 30;
+        
+        // DOM Elements
+        const balanceEl = document.getElementById('balance');
+        const dailyProfitEl = document.getElementById('dailyProfit');
+        const openTradesEl = document.getElementById('openTrades');
+        const successRateEl = document.getElementById('successRate');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const aiStatusEl = document.getElementById('aiStatus');
+        const aiContentEl = document.getElementById('aiAnalysisContent');
+        const notificationEl = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        const tradesContainer = document.getElementById('tradesContainer');
+        const stopLossSlider = document.getElementById('stopLoss');
+        const stopLossValue = document.getElementById('stopLossValue');
+        const takeProfitSlider = document.getElementById('takeProfit');
+        const takeProfitValue = document.getElementById('takeProfitValue');
+        
+        // Initialize market chart
+        const ctx = document.getElementById('marketChart').getContext('2d');
+        const marketChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(chartDataPoints).fill(''),
+                datasets: [{
+                    label: 'Price',
+                    data: Array(chartDataPoints).fill(0),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+        
+        // Update sliders
+        stopLossSlider.addEventListener('input', () => {
+            stopLossValue.textContent = `${stopLossSlider.value}%`;
+        });
+        
+        takeProfitSlider.addEventListener('input', () => {
+            takeProfitValue.textContent = `${takeProfitSlider.value}%`;
+        });
+        
+        // Show notification
+        function showNotification(message, type = '') {
+            notificationText.textContent = message;
+            notificationEl.className = 'notification show';
+            if (type) notificationEl.classList.add(type);
+            
+            setTimeout(() => {
+                notificationEl.classList.remove('show');
+                if (type) notificationEl.classList.remove(type);
+            }, 5000);
+        }
+        
+        // Get market data from Deriv
+        async function getMarketData() {
+            const asset = document.getElementById('asset').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/market-data`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol: asset })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get market data');
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Market data error:', error);
+                showNotification('Failed to get market data', 'danger');
+                return null;
+            }
+        }
+        
+        // Get AI analysis
+        async function getAIAnalysis(marketData) {
+            aiStatusEl.textContent = 'Analyzing...';
+            aiStatusEl.classList.add('pulse');
+            aiContentEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> AI is analyzing market data...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/ai-analysis`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ market_data: marketData })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('AI analysis failed');
+                }
+                
+                const data = await response.json();
+                aiStatusEl.textContent = 'Analysis complete';
+                aiStatusEl.classList.remove('pulse');
+                return data.analysis;
+            } catch (error) {
+                console.error('AI analysis error:', error);
+                aiStatusEl.textContent = 'Analysis failed';
+                aiStatusEl.classList.remove('pulse');
+                aiContentEl.innerHTML = '<p class="danger">AI analysis failed. Please try again.</p>';
+                return null;
+            }
+        }
+        
+        // Place trade
+        async function placeTrade(signalData) {
+            const asset = document.getElementById('asset').value;
+            const amount = document.getElementById('amount').value;
+            const stopLoss = parseFloat(stopLossSlider.value);
+            const takeProfit = parseFloat(takeProfitSlider.value);
+            
+            // Extract signal from AI analysis
+            const signalMatch = signalData.match(/(BUY|SELL|HOLD)/i);
+            if (!signalMatch || signalMatch[0].toUpperCase() === 'HOLD') {
+                return null;
+            }
+            
+            const action = signalMatch[0].toUpperCase();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/place-trade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        symbol: asset,
+                        amount,
+                        action,
+                        stopLoss,
+                        takeProfit
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Trade placement failed');
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Trade error:', error);
+                showNotification('Trade placement failed', 'danger');
+                return null;
+            }
+        }
+        
+        // Parse AI signal
+        function parseAISignal(analysis) {
+            const signalMatch = analysis.match(/(BUY|SELL|HOLD)/i);
+            const signal = signalMatch ? signalMatch[0].toUpperCase() : 'HOLD';
+            
+            const confidenceMatch = analysis.match(/(\d+)% confidence/i);
+            const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 0;
+            
+            const entryMatch = analysis.match(/entry price: (\d+\.\d+)/i);
+            const entryPrice = entryMatch ? parseFloat(entryMatch[1]) : null;
+            
+            const stopLossMatch = analysis.match(/stop loss: (\d+\.\d+)/i);
+            const stopLoss = stopLossMatch ? parseFloat(stopLossMatch[1]) : null;
+            
+            const takeProfitMatch = analysis.match(/take profit: (\d+\.\d+)/i);
+            const takeProfit = takeProfitMatch ? parseFloat(takeProfitMatch[1]) : null;
+            
+            return {
+                signal,
+                confidence,
+                entryPrice,
+                stopLoss,
+                takeProfit,
+                analysis
+            };
+        }
+        
+        // Add trade to history
+        function addTradeToHistory(trade, signal) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const tradeEl = document.createElement('div');
+            tradeEl.className = `log-entry ${trade.action.toLowerCase()}`;
+            
+            const profit = trade.profit !== undefined ? 
+                `$${trade.profit.toFixed(2)}` : 'Pending';
+                
+            const profitClass = trade.profit > 0 ? 'profit' : 
+                trade.profit < 0 ? 'loss' : '';
+            
+            tradeEl.innerHTML = `
+                <div>
+                    <strong>${trade.action} ${trade.symbol}</strong> @ ${trade.entry_price}
+                    <div class="log-time">${timeString}</div>
+                </div>
+                <div class="${profitClass}">${profit}</div>
+            `;
+            
+            // Add to top of container
+            tradesContainer.insertBefore(tradeEl, tradesContainer.firstChild);
+            
+            // Remove "No trades" message if present
+            if (tradesContainer.children.length > 1 && 
+                tradesContainer.lastChild.textContent.includes('No trades')) {
+                tradesContainer.removeChild(tradesContainer.lastChild);
+            }
+            
+            // Limit to 10 trades
+            if (tradesContainer.children.length > 10) {
+                tradesContainer.removeChild(tradesContainer.lastChild);
+            }
+            
+            // Update stats
+            if (trade.profit !== undefined) {
+                const currentBalance = parseFloat(balanceEl.textContent.replace('$', ''));
+                const newBalance = currentBalance + trade.profit;
+                balanceEl.textContent = `$${newBalance.toFixed(2)}`;
+                
+                const dailyProfit = parseFloat(dailyProfitEl.textContent.replace(/[^\d.-]/g, ''));
+                dailyProfitEl.textContent = `${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}`;
+                dailyProfitEl.className = `stat-value ${trade.profit >= 0 ? 'profit' : 'loss'}`;
+                
+                const openTrades = parseInt(openTradesEl.textContent);
+                openTradesEl.textContent = Math.max(0, openTrades - 1);
+            } else {
+                const openTrades = parseInt(openTradesEl.textContent);
+                openTradesEl.textContent = openTrades + 1;
+            }
+        }
+        
+        // Auto trading cycle
+        async function autoTradingCycle() {
+            try {
+                // Get market data
+                const marketData = await getMarketData();
+                if (!marketData) return;
+                
+                // Update chart
+                updateChart(marketData.tick.quote);
+                
+                // Get AI analysis
+                const analysis = await getAIAnalysis(marketData);
+                if (!analysis) return;
+                
+                // Parse AI signal
+                const signalData = parseAISignal(analysis);
+                
+                // Display analysis
+                aiContentEl.innerHTML = formatAIAnalysis(signalData);
+                
+                // Place trade if not HOLD
+                if (signalData.signal !== 'HOLD') {
+                    const tradeResult = await placeTrade(signalData);
+                    if (tradeResult) {
+                        tradeResult.symbol = document.getElementById('asset').value;
+                        tradeResult.action = signalData.signal;
+                        tradeResult.entry_price = marketData.tick.quote;
+                        addTradeToHistory(tradeResult, signalData);
+                        showNotification(`Trade placed: ${signalData.signal} @ $${marketData.tick.quote}`, 'success');
+                    }
+                }
+            } catch (error) {
+                console.error('Auto trading error:', error);
+            }
+        }
+        
+        // Format AI analysis for display
+        function formatAIAnalysis(signalData) {
+            let html = '';
+            
+            // Signal with color coding
+            let signalClass = '';
+            if (signalData.signal === 'BUY') signalClass = 'signal-buy';
+            else if (signalData.signal === 'SELL') signalClass = 'signal-sell';
+            else signalClass = 'signal-hold';
+            
+            html += `<p><strong>Signal: <span class="signal-indicator ${signalClass}">${signalData.signal}</span> `;
+            html += `(${signalData.confidence}% confidence)</strong></p>`;
+            
+            // Recommendations
+            if (signalData.entryPrice) {
+                html += `<p><i class="fas fa-arrow-right"></i> Entry: $${signalData.entryPrice.toFixed(4)}</p>`;
+            }
+            
+            if (signalData.stopLoss) {
+                html += `<p><i class="fas fa-shield-alt"></i> Stop Loss: $${signalData.stopLoss.toFixed(4)}</p>`;
+            }
+            
+            if (signalData.takeProfit) {
+                html += `<p><i class="fas fa-trophy"></i> Take Profit: $${signalData.takeProfit.toFixed(4)}</p>`;
+            }
+            
+            // Analysis text
+            html += `<p>${signalData.analysis.replace(/\n/g, '<br>')}</p>`;
+            
+            return html;
+        }
+        
+        // Update chart with new price
+        function updateChart(price) {
+            const chart = marketChart;
+            const data = chart.data.datasets[0].data;
+            
+            // Add new price
+            data.push(price);
+            
+            // Remove oldest price if over limit
+            if (data.length > chartDataPoints) {
+                data.shift();
+            }
+            
+            // Update labels (time)
+            const now = new Date();
+            const timeLabels = [];
+            for (let i = chartDataPoints - 1; i >= 0; i--) {
+                const time = new Date(now - i * 60000); // 1 min intervals
+                timeLabels.push(time.getMinutes() + ':' + time.getSeconds().toString().padStart(2, '0'));
+            }
+            chart.data.labels = timeLabels;
+            
+            chart.update('none');
+        }
+        
+        // Start auto trading
+        startBtn.addEventListener('click', () => {
+            if (tradingInterval) {
+                clearInterval(tradingInterval);
+            }
+            
+            const timeframe = document.getElementById('timeframe').value;
+            let intervalTime;
+            
+            switch(timeframe) {
+                case '1m': intervalTime = 60000; break;
+                case '5m': intervalTime = 300000; break;
+                case '15m': intervalTime = 900000; break;
+                case '1h': intervalTime = 3600000; break;
+                case '4h': intervalTime = 14400000; break;
+                default: intervalTime = 900000; // 15m default
+            }
+            
+            // Run immediately and then at interval
+            autoTradingCycle();
+            tradingInterval = setInterval(autoTradingCycle, intervalTime);
+            
+            showNotification("Auto trading started", "success");
+        });
+        
+        // Stop auto trading
+        stopBtn.addEventListener('click', () => {
+            if (tradingInterval) {
+                clearInterval(tradingInterval);
+                tradingInterval = null;
+                showNotification("Auto trading stopped", "warning");
+            }
+        });
+        
+        // Initial notification
+        showNotification("System ready. Configure settings and start trading.", "success");
+    </script>
+</body>
+</html>
