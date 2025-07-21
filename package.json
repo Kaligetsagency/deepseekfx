@@ -1,5 +1,5 @@
 {
-  "name": "auto-trader-app",
+  "name": "deepseekfx",
   "version": "1.0.0",
   "description": "Automated Trading with Deriv and DeepSeek AI",
   "main": "server.js",
